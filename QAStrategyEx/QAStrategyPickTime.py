@@ -11,15 +11,17 @@ import numpy as np
 import pandas as pd
 from QAStrategy.qastockbase import QAStrategyStockBase
 from abupy import AbuPickTimeWorker, AbuFactorBuyBreak, AbuFactorSellBreak, AbuFactorPreAtrNStop, \
-    AbuFactorCloseAtrNStop, AbuFactorAtrNStop, AbuBenchmark, AbuCapital
+    AbuFactorCloseAtrNStop, AbuFactorAtrNStop, AbuBenchmark, AbuCapital, EMarketTargetType
+from abupy.CoreBu import ABuEnv
 
 
 class QAStrategyPickTime(QAStrategyStockBase):
 
     #
-    def __init__(self):
+    def initPickTimeWorker(self):
         from abupy import AbuSlippageBuyBase
 
+        ABuEnv.g_market_target = EMarketTargetType.E_MARKET_TARGET_CN
         # 修改g_open_down_rate的值为0.02
         g_open_down_rate = 0.02
 
@@ -75,4 +77,5 @@ class QAStrategyPickTime(QAStrategyStockBase):
 if __name__ == '__main__':
     # '000001',
     s = QAStrategyPickTime(code='000002', frequence='30min', start='2019-07-01', end='2019-07-05', strategy_id='x')
+    s.initPickTimeWorker()
     s.run_sim()
