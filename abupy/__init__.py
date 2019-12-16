@@ -21,7 +21,7 @@ from .MarketBu import *
 from .SimilarBu import *
 from .WidgetBu import *
 
-__all__ = ['AlphaBu', 'BetaBu', 'CheckBu', 'UmpBu', 'FactorSellBu', 'FactorSell', 'IndicatorBu', 'MarketBu', 'UtilBu',
+__all__ = ['AlphaBu', 'BetaBu', 'CheckBu', 'UmpBu', 'FactorSellBu', 'FactorSellBu', 'IndicatorBu', 'MarketBu', 'UtilBu',
            'SimilarBu', 'MetricsBu', 'SlippageBu', 'PickStockBu', 'CoreBu', 'TLineBu',
            'MLBu', 'DLBu', 'TradeBu', 'WidgetBu']
 
