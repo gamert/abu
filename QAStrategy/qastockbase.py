@@ -19,7 +19,7 @@ import QUANTAXIS as QA
 from QUANTAXIS.QAARP import QA_Risk, QA_User
 from QUANTAXIS.QAEngine.QAThreadEngine import QA_Thread
 from QUANTAXIS.QAUtil.QAParameter import MARKET_TYPE, RUNNING_ENVIRONMENT, ORDER_DIRECTION
-from QAPUBSUB.consumer import subscriber_topic
+from QAPUBSUB.consumer import subscriber_topic,  subscriber_routing
 from QAPUBSUB.producer import publisher_routing
 from QAStrategy.qactabase import QAStrategyCTABase
 from QIFIAccount import QIFI_Account
@@ -28,12 +28,12 @@ from QIFIAccount import QIFI_Account
 class QAStrategyStockBase(QAStrategyCTABase):
 
     def __init__(self, code=['000001'], frequence='1min', strategy_id='QA_STRATEGY', risk_check_gap=1, portfolio='default',
-                 start='2019-01-01', end='2019-10-21', send_wx=False,
+                 start='2019-01-01', end='2019-10-21', send_wx=False, market_type='stock_cn',
                  data_host=eventmq_ip, data_port=eventmq_port, data_user=eventmq_username, data_password=eventmq_password,
                  trade_host=eventmq_ip, trade_port=eventmq_port, trade_user=eventmq_username, trade_password=eventmq_password,
                  taskid=None, mongo_ip=mongo_ip):
         super().__init__(code=code, frequence=frequence, strategy_id=strategy_id, risk_check_gap=risk_check_gap, portfolio=portfolio,
-                         start=start, end=end,send_wx=send_wx,
+                         start=start, end=end, send_wx=send_wx,
                          data_host=eventmq_ip, data_port=eventmq_port, data_user=eventmq_username, data_password=eventmq_password,
                          trade_host=eventmq_ip, trade_port=eventmq_port, trade_user=eventmq_username, trade_password=eventmq_password,
                          taskid=taskid, mongo_ip=mongo_ip)
@@ -48,6 +48,7 @@ class QAStrategyStockBase(QAStrategyCTABase):
             code {[type]} -- [description]
             frequence {[type]} -- [description]
         """
+        
         self.sub = subscriber_topic(exchange='realtime_stock_{}'.format(
             frequence), host=data_host, port=data_port, user=data_user, password=data_password, routing_key='')
         for item in code:
@@ -92,9 +93,17 @@ class QAStrategyStockBase(QAStrategyCTABase):
         """
 
         self.new_data = json.loads(str(body, encoding='utf-8'))
+
+        self.latest_price[self.new_data['code']] = self.new_data['close']
+
         self.running_time = self.new_data['datetime']
-        if float(self.new_data['datetime'][-9:]) == 0:
+        if self.dt != str(self.new_data['datetime'])[0:16]:
+            # [0:16]是分钟线位数
+            print('update!!!!!!!!!!!!')
+            self.dt = str(self.new_data['datetime'])[0:16]
             self.isupdate = True
+
+            
         self.acc.on_price_change(self.new_data['code'], self.new_data['close'])
         bar = pd.DataFrame([self.new_data]).set_index(['datetime', 'code']
                                                       ).loc[:, ['open', 'high', 'low', 'close', 'volume']]
@@ -103,32 +112,38 @@ class QAStrategyStockBase(QAStrategyCTABase):
     def _debug_sim(self):
         self.running_mode = 'sim'
 
+        last_day = QA.QA_util_get_last_day(QA.QA_util_get_real_date(str(datetime.date.today())))
+        # self._old_data = QA.QA_fetch_stock_min(self.code, last_day , str(datetime.datetime.now()), format='pd', frequence=self.frequence).set_index(['datetime', 'code'])
+
+        # 模拟盘就是分钟？
         if self.frequence.endswith('min'):
-            self._old_data = QA.QA_fetch_get_stock_min('tdx', self.code, QA.QA_util_get_last_day(
-                QA.QA_util_get_real_date(str(datetime.date.today()))), str(datetime.datetime.now()), self.frequence)[:-1].set_index(['datetime', 'code'])
+            if isinstance(self.code, str):
+                self._old_data = QA.QA_fetch_get_stock_min('tdx', self.code.upper(), last_day, str(datetime.datetime.now()), self.frequence)[:-1].set_index(['datetime', 'code'])
+                # self._old_data = self._old_data.assign(volume=self._old_data.trade).loc[:, [
+                #     'open', 'high', 'low', 'close', 'volume']]
+            else:
+                self._old_data = pd.concat([QA.QA_fetch_get_stock_min('tdx', item.upper(), last_day, str(datetime.datetime.now()), self.frequence)[:-1].set_index(['datetime', 'code']) for item in self.code], sort=False)
             # self._old_data = self._old_data.assign(volume=self._old_data.trade).loc[:, [
             #     'open', 'high', 'low', 'close', 'volume']]
         else:
             self._old_data = pd.DataFrame()
-
-        # self._old_data = QA.QA_fetch_stock_min(self.code, QA.QA_util_get_last_day(
-        #     QA.QA_util_get_real_date(str(datetime.date.today()))), str(datetime.datetime.now()), format='pd', frequence=self.frequence).set_index(['datetime', 'code'])
-
+        print("self._old_data: len = ", len(self._old_data))
+        # 重排？
         self._old_data = self._old_data.loc[:, [
             'open', 'high', 'low', 'close', 'volume']]
-
+        # 指定实时数据库..
         self.database = pymongo.MongoClient(mongo_ip).QAREALTIME
-
+        # 账户Collection
         self.client = self.database.account
         self.subscriber_client = self.database.subscribe
-
+        # 创建策略账户(一个基于快期DIFF协议的QA实时账户协议)...
         self.acc = QIFI_Account(
             username=self.strategy_id, password=self.strategy_id, trade_host=mongo_ip)
         self.acc.initial()
-
+        # 分发？
         self.pub = publisher_routing(exchange='QAORDER_ROUTER', host=self.trade_host,
                                      port=self.trade_port, user=self.trade_user, password=self.trade_password)
-
+        # 注册一个MQ
         self.subscribe_data(self.code, self.frequence, self.data_host,
                             self.data_port, self.data_user, self.data_password)
 
@@ -145,12 +160,6 @@ class QAStrategyStockBase(QAStrategyCTABase):
             pass
 
 
-    def get_code_marketdata(self, code):
-        return self.market_data.loc[(slice(None), code), :]
-
-    def get_current_marketdata(self):
-        return self.market_data.loc[(self.running_time, slice(None)), :]
-
     def debug(self):
         self.running_mode = 'backtest'
         self.database = pymongo.MongoClient(mongo_ip).QUANTAXIS
@@ -158,7 +167,7 @@ class QAStrategyStockBase(QAStrategyCTABase):
         port = user.new_portfolio(self.portfolio)
         self.acc = port.new_accountpro(
             account_cookie=self.strategy_id, init_cash=self.init_cash, market_type=self.market_type)
-        #self.positions = self.acc.get_position(self.code)
+        self.positions = self.acc.get_position(self.code)
 
         print(self.acc)
 
@@ -166,20 +175,7 @@ class QAStrategyStockBase(QAStrategyCTABase):
         data = QA.QA_quotation(self.code, self.start, self.end, source=QA.DATASOURCE.MONGO,
                                frequence=self.frequence, market=self.market_type, output=QA.OUTPUT_FORMAT.DATASTRUCT)
 
-        def x1(item):
-            # print(data)
-            self._on_1min_bar()
-            self._market_data.append(item)
-
-            if str(item.name[0])[0:10] != str(self.running_time)[0:10]:
-                if self.market_type == QA.MARKET_TYPE.STOCK_CN:
-                    print('backtest: Settle!')
-                    self.acc.settle()
-
-            self.running_time = str(item.name[0])
-            self.on_bar(item)
-
-        data.data.apply(x1, axis=1)
+        data.data.apply(self.x1, axis=1)
 
     def update_account(self):
         if self.running_mode == 'sim':
