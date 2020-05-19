@@ -54,9 +54,9 @@ def sample_91(show=True):
     """
     # 设置初始资金数
     read_cash = 1000000
-    # 择时股票池
-    choice_symbols = ['usNOAH', 'usSFUN', 'usBIDU', 'usAAPL', 'usGOOG',
-                      'usTSLA', 'usWUBA', 'usVIPS']
+    # 择时股票池 , 'usNOAH', 'usSFUN', 'usAAPL', 'usGOOG',
+    #                       'usTSLA', 'usWUBA', 'usVIPS'
+    choice_symbols = ['usBIDU']
     # 使用run_loop_back运行策略
     abu_result_tuple, kl_pd_manager = abu.run_loop_back(read_cash,
                                                         buy_factors,
@@ -470,7 +470,7 @@ def sample_94_4(from_cache=False):
 
 if __name__ == "__main__":
     sample_91()
-    # sample_922()
+    sample_922()
     # sample_931()
     # sample_932()
     # 耗时操作
@@ -485,3 +485,4 @@ if __name__ == "__main__":
     # sample_94_3(from_cache=True)
     # sample_94_4()
     # sample_94_4(from_cache=True)
+    pass

@@ -59,6 +59,7 @@ def sample_811():
     kl_pd_manager = AbuKLManager(benchmark, capital)
     # 获取TSLA的交易数据
     kl_pd = kl_pd_manager.get_pick_time_kl_pd('usTSLA')
+    print(kl_pd)
     abu_worker = AbuPickTimeWorker(capital, kl_pd, benchmark, buy_factors, None)
     abu_worker.fit()
 
@@ -121,11 +122,15 @@ def sample_813():
     buy_factors2 = [{'slippage': AbuSlippageBuyMean2, 'xd': 60, 'class': AbuFactorBuyBreak},
                     {'xd': 42, 'class': AbuFactorBuyBreak}]
 
+    # 可以定义一堆的卖出条件...
     sell_factor1 = {'xd': 120, 'class': AbuFactorSellBreak}
     sell_factor2 = {'stop_loss_n': 0.5, 'stop_win_n': 3.0, 'class': AbuFactorAtrNStop}
     sell_factor3 = {'class': AbuFactorPreAtrNStop, 'pre_atr_n': 1.0}
     sell_factor4 = {'class': AbuFactorCloseAtrNStop, 'close_atr_n': 1.5}
+
     sell_factors = [sell_factor1, sell_factor2, sell_factor3, sell_factor4]
+
+
     benchmark = AbuBenchmark()
     capital = AbuCapital(1000000, benchmark)
     orders_pd, action_pd, _ = ABuPickTimeExecute.do_symbols_with_same_factors(
@@ -143,6 +148,7 @@ def sample_814(show=True):
     sell_factor3 = {'class': AbuFactorPreAtrNStop, 'pre_atr_n': 1.0}
     sell_factor4 = {'class': AbuFactorCloseAtrNStop, 'close_atr_n': 1.5}
     sell_factors = [sell_factor1, sell_factor2, sell_factor3, sell_factor4]
+
     benchmark = AbuBenchmark()
     buy_factors = [{'xd': 60, 'class': AbuFactorBuyBreak},
                    {'xd': 42, 'class': AbuFactorBuyBreak}]
@@ -390,16 +396,17 @@ def sample_823():
 
 
 if __name__ == "__main__":
-    sample_811()
-    # sample_812()
-    # sample_813()
-    # sample_814()
-    # sample_815()
-    # sample_816()
-    # sample_817()
+    #sample_811()
+    #sample_812()
+    #sample_813()
+    #sample_814()
+    #sample_815()
+    #sample_816()
+    sample_817()
 
     # sample_821_1()
     # sample_821_2()
     # sample_821_3()
     # sample_822()
     # sample_823()
+    pass

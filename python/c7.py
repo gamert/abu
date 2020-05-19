@@ -265,6 +265,7 @@ def sample_713():
     sell_index = kl_pd[kl_pd['close'] < kl_pd['n2_low'].shift(1)].index
     kl_pd.loc[sell_index, 'signal'] = 0
 
+    print(kl_pd.signal)
     kl_pd.signal.value_counts().plot(kind='pie', figsize=(5, 5))
     plt.show()
 
@@ -560,13 +561,14 @@ def sample_723():
 
 
 if __name__ == "__main__":
-    sample_711()
+    # sample_711()
     # sample_712_1()
     # sample_712_2()
     # sample_712_3()
     # sample_712_4()
-    # sample_713()
+    sample_713()
     # sample_722_1()
     # sample_722_2()
     # sample_722_3()
     # sample_723()
+    pass

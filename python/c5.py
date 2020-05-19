@@ -731,7 +731,7 @@ def sample_582_1():
     nd.atr.plot_atr_from_klpd(tsla_df)
 
 if __name__ == "__main__":
-    sample_511()
+    # sample_511()
     # sample_512()
     # sample_513()
     # sample_52()
@@ -750,4 +750,5 @@ if __name__ == "__main__":
     # sample_571_2()
     # sample_572()
     # sample_581()
-    # sample_582_1()
+    sample_582_1()
+    pass

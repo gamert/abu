@@ -168,7 +168,7 @@ class AbuPickTimeWorker(AbuPickTimeWorkBase):
         for buy_factor in self.buy_factors:
             # 不能使用today.exec_week或者today.exec_month来判定，因为有可能都时true
             buy_factor.fit_ps_week(today) if is_week else buy_factor.fit_ps_month(today)
-
+    # today = ('close', 223.57) ('high', 226.97) ('low', 221.75) ('p_change', 0.01) ('open', 222.72) ('pre_close', 223.54) ('volume', 3090383.0) ('date', 20140725.0) ('date_week', 4.0) ('key', 0.0) ('atr21', 8.641804238981178) ('atr14', 8.032799160885201) ('week_task',
     def _task_loop(self, today):
         """
         开始时间驱动，进行日任务，周任务，月任务，

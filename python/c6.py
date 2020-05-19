@@ -38,7 +38,7 @@ y = tsla_close.values
 
 def sample_611_1(show=True):
     """
-    6.1.1 线性回归
+    6.1.1 线性回归(最小二乘法)
     :return:
     """
     import statsmodels.api as sm
@@ -833,7 +833,7 @@ def sample_634():
 
 
 if __name__ == "__main__":
-    sample_611_1()
+    # sample_611_1()
     # sample_611_2()
     # sample_612()
     # sample_613()
@@ -845,7 +845,8 @@ if __name__ == "__main__":
     # sample_624()
     # sample_625()
     # sample_626()
-    # sample_630()
+    sample_630()
     # sample_631()
     # sample_632()
-    # sample_634()
+    sample_634()
+    pass
